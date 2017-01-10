@@ -1,6 +1,4 @@
------------------------------------------------------------------------------
-Universal Automatic Indexing Controller (UAIC) ("you-ache")
------------------------------------------------------------------------------
+# Universal Automatic Indexing Controller (UAIC) ("you-ache")
 
 The purpose of this design is to retrofit universally to any model train
 turntable drive system, and provide automatic indexing. This design uses
