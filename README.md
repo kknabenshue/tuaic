@@ -1,4 +1,6 @@
-# Turntable Universal Automatic Indexing Controller (TUAIC) ("two-ache")
+# Turntable Universal Automatic Indexing Controller (TUAIC)
+
+## "Two-Ache"
 
 The purpose of this design is to retrofit universally to any model train
 turntable drive system, and provide automatic indexing. This design uses
