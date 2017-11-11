@@ -73,6 +73,7 @@ void loop() {
   //   }
   //   tft.enableCapISR();//rearm ISR if needed (touched(true))
   //   //otherwise it doesn't do nothing...
+    Serial.println("Screen was touched");
     tft.clearScreen(RA8875_WHITE);
     tft.setTextColor(RA8875_BLACK, RA8875_WHITE);
     tft.setCursor(CENTER, CENTER);
