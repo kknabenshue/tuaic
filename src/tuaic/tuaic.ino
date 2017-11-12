@@ -15,9 +15,40 @@
 #define RA8875_RST 9
 #define RA8875_INT 2
 
-#define MAX_TOUCH_LIMIT 2
+#define MAX_TOUCH_LIMIT 1
+
+// Color definitions.
+// ---------------------------------------------------------------------
+#define C_BLACK         0x0000
+#define C_WHITE         0xFFFF
+#define C_RED           0xF800
+#define C_GREEN         0x07E0
+#define C_BLUE          0x001F
+
+#define C_WDW_BG        C_WHITE
+
+#define C_TAB_ACT       C_WDW_BG
+#define C_TAB_INACT     0x7BEF
+#define C_TAB_ACT_LINE  0xC618
+
+// Tab area/position definitions.
+// ---------------------------------------------------------------------
+#define C_TAB_W   160
+#define C_TAB_H   50
+#define C_X_MIN   0
+#define C_Y_MIN   0
+#define C_X_W     480
+#define C_Y_H     272
+
+#define C_TXT_TX1 C_TAB_W/2
+#define C_TXT_TX2 C_TAB_W + C_TAB_W/2
+#define C_TXT_TX3 2*C_TAB_W + C_TAB_W/2
+#define C_TXT_TY  C_TAB_H/2
+
 
 RA8875 tft = RA8875(RA8875_CS, RA8875_RST);
+
+unsigned cur_lay = 0;
 
 
 void setup() {
@@ -44,42 +75,100 @@ void setup() {
 }
 
 void loop() {
-  #if defined(USE_FT5206_TOUCH)
-  if (tft.touched()){//if touched(true) detach isr
-  // //at this point we need to fill the FT5206 registers...
-  //   tft.updateTS();//now we have the data inside library
-  //   tft.setCursor(CENTER,CENTER);
-  //   tft.print("                              ");
-  //   tft.setCursor(CENTER,CENTER);
-  //   tft.print("touches:");
-  //   tft.print(tft.getTouches());
-  //   tft.print(" | gesture:");
-  //   tft.print(tft.getGesture(),HEX);
-  //   tft.print(" | state:");
-  //   tft.print(tft.getTouchState(),HEX);
-  //   //you need to get the coordinates? We need a bidimensional array
-  //   uint16_t coordinates[MAX_TOUCH_LIMIT][2];//to hold coordinates
-  //   tft.getTScoordinates(coordinates);//done
-  //   //now coordinates has the x,y of all touches
-  //   //now draw something....
-  //   uint16_t tempCol;
-  //   for (uint8_t i=1;i<=tft.getTouches();i++){
-  //     if (i == 1)tempCol = RA8875_RED;
-  //     if (i == 2)tempCol = RA8875_GREEN;
-  //     if (i == 3)tempCol = RA8875_MAGENTA;
-  //     if (i == 4)tempCol = RA8875_CYAN;
-  //     if (i == 5)tempCol = RA8875_YELLOW;
-  //     tft.fillCircle(coordinates[i-1][0],coordinates[i-1][1],10,tempCol);
-  //   }
-  //   tft.enableCapISR();//rearm ISR if needed (touched(true))
-  //   //otherwise it doesn't do nothing...
-    Serial.println("Screen was touched");
-    tft.clearScreen(RA8875_WHITE);
-    tft.setTextColor(RA8875_BLACK, RA8875_WHITE);
-    tft.setCursor(CENTER, CENTER);
-    // tft.setFontSize(20);
-    tft.setFontScale(1.5);
-    tft.print("WELCOME TO THE TUAIC");
+  if (tft.touched()) {
+    tft.clearScreen(C_WDW_BG);
+    
+    
+    
+    // Welcome screen.
+    // ---------------------------------------------------------------------------------------------
+    // tft.clearScreen(RA8875_WHITE);
+    // tft.setTextColor(RA8875_BLACK, RA8875_WHITE);
+    // tft.setCursor(CENTER, CENTER);
+    // // tft.setFontSize(20);
+    // tft.setFontScale(1.5);
+    // tft.print("WELCOME TO THE TUAIC");
+    
+    
+    // Draw tabs.
+    // ---------------------------------------------------------------------------------------------
+    // Draw tab 1 active.
+    // ---------------------------------------------------------------------
+    tft.fillRect(0, 0, C_X_W, C_TAB_H, C_TAB_INACT);                  // Inactive tab background.
+    tft.drawFastHLine(0, C_TAB_H-1, C_X_W, C_BLACK);                  // Inactive tab bottom line.
+    tft.fillRect(0, 0, C_TAB_W, C_TAB_H+1, C_TAB_ACT);                // Active tab background.
+    tft.drawFastVLine(C_TAB_W, 0, C_TAB_H, C_BLACK);                  // Tab dividing lines.
+    tft.drawFastVLine(2*C_TAB_W, 0, C_TAB_H, C_BLACK);
+    
+    tft.setTextColor(C_BLACK, C_TAB_ACT);                             // Tab 1 text.
+    tft.setFontScale(1);
+    tft.setCursor(C_TXT_TX1, C_TXT_TY, true);
+    tft.print("MANUAL");
+    tft.setTextColor(C_BLACK, C_TAB_INACT);                           // Tab 2 text.
+    tft.setFontScale(1);
+    tft.setCursor(C_TXT_TX2, C_TXT_TY, true);
+    tft.print("AUTO");
+    tft.setTextColor(C_BLACK, C_TAB_INACT);                           // Tab 3 text.
+    tft.setFontScale(1);
+    tft.setCursor(C_TXT_TX3, C_TXT_TY, true);
+    tft.print("PROGRAM");
+    
+    // Draw tab 2 active.
+    // ---------------------------------------------------------------------
+    tft.fillRect(0, 0, C_X_W, C_TAB_H, C_TAB_INACT);                  // Inactive tab background.
+    tft.drawFastHLine(0, C_TAB_H-1, C_X_W, C_BLACK);                  // Inactive tab bottom line.
+    tft.fillRect(C_TAB_W, 0, C_TAB_W, C_TAB_H+1, C_TAB_ACT);          // Active tab background.
+    tft.drawFastVLine(C_TAB_W, 0, C_TAB_H, C_BLACK);                  // Tab dividing lines.
+    tft.drawFastVLine(2*C_TAB_W, 0, C_TAB_H, C_BLACK);
+    
+    tft.setTextColor(C_BLACK, C_TAB_INACT);                           // Tab 1 text.
+    tft.setFontScale(1);
+    tft.setCursor(C_TXT_TX1, C_TXT_TY, true);
+    tft.print("MANUAL");
+    tft.setTextColor(C_BLACK, C_TAB_ACT);                             // Tab 2 text.
+    tft.setFontScale(1);
+    tft.setCursor(C_TXT_TX2, C_TXT_TY, true);
+    tft.print("AUTO");
+    tft.setTextColor(C_BLACK, C_TAB_INACT);                           // Tab 3 text.
+    tft.setFontScale(1);
+    tft.setCursor(C_TXT_TX3, C_TXT_TY, true);
+    tft.print("PROGRAM");
+    
+    // Draw tab 3 active.
+    // ---------------------------------------------------------------------
+    tft.fillRect(0, 0, C_X_W, C_TAB_H, C_TAB_INACT);                  // Inactive tab background.
+    tft.drawFastHLine(0, C_TAB_H-1, C_X_W, C_BLACK);                  // Inactive tab bottom line.
+    tft.fillRect(2*C_TAB_W, 0, C_TAB_W, C_TAB_H+1, C_TAB_ACT);        // Active tab background.
+    tft.drawFastVLine(C_TAB_W, 0, C_TAB_H, C_BLACK);                  // Tab dividing lines.
+    tft.drawFastVLine(2*C_TAB_W, 0, C_TAB_H, C_BLACK);
+    
+    tft.setTextColor(C_BLACK, C_TAB_INACT);                           // Tab 1 text.
+    tft.setFontScale(1);
+    tft.setCursor(C_TXT_TX1, C_TXT_TY, true);
+    tft.print("MANUAL");
+    tft.setTextColor(C_BLACK, C_TAB_INACT);                           // Tab 2 text.
+    tft.setFontScale(1);
+    tft.setCursor(C_TXT_TX2, C_TXT_TY, true);
+    tft.print("AUTO");
+    tft.setTextColor(C_BLACK, C_TAB_ACT);                             // Tab 3 text.
+    tft.setFontScale(1);
+    tft.setCursor(C_TXT_TX3, C_TXT_TY, true);
+    tft.print("PROGRAM");
   }
-  #endif
+  
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
