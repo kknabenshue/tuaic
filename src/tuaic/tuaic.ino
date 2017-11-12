@@ -37,29 +37,52 @@
 
 // Tab area/position definitions.
 // ---------------------------------------------------------------------
-#define C_TAB_W   160
-#define C_TAB_H   50
-#define C_X_MIN   0
-#define C_Y_MIN   0
-#define C_WIDTH   480
-#define C_HEIGHT  272
+#define C_X_MIN     0
+#define C_Y_MIN     0
+#define C_WIDTH     272
+#define C_HEIGHT    480
 
-#define C_TXT_TX1 C_TAB_W/2
-#define C_TXT_TX2 C_TAB_W + C_TAB_W/2
-#define C_TXT_TX3 2*C_TAB_W + C_TAB_W/2
-#define C_TXT_TY  C_TAB_H/2
+#define C_TAB_W     ceil(C_WIDTH/3.0)
+#define C_TAB_H     30
+
+// <todo>: Create buffer size helper functions.
+#define C_TXT_TX1   C_TAB_W/2 - (6 * tft.getFontWidth())/2
+#define C_TXT_TX2   C_TAB_W + C_TAB_W/2 - (4 * tft.getFontWidth())/2
+#define C_TXT_TX3   2*C_TAB_W + C_TAB_W/2 - (7 * tft.getFontWidth())/2
+#define C_TXT_TY    C_TAB_H/2 - tft.getFontHeight()/2
+#define C_TXT_TS    0.95
 
 // Window object area/position definitions.
 // ---------------------------------------------------------------------
-#define C_TABLE_X 120
-#define C_TABLE_Y ((C_HEIGHT - C_TAB_H) / 2) + C_TAB_H
-#define C_TABLE_R 80
+#define C_TABLE_R   50
+#define C_TABLE_X   C_WIDTH/2
+#define C_TABLE_Y   C_TAB_H + C_TABLE_R + 30
+
+#define C_CTRL_B_W  87
+#define C_CTRL_B_H  60
+#define C_CTRL_W    3 * C_CTRL_B_W + 1
+#define C_CTRL_H    4 * C_CTRL_B_H + 1
+#define C_CTRL_BRD  (C_WIDTH - C_CTRL_W) / 2 - 1
+#define C_CTRL_X    C_CTRL_BRD
+#define C_CTRL_Y    C_HEIGHT - C_CTRL_H - C_CTRL_BRD
+
 
 
 RA8875 tft = RA8875(RA8875_CS, RA8875_RST);
 
-const float rad_conv = 0.0174532925;
-char cur_tab = 0;
+const uint8_t C_SW_REV_MAJ = 0;
+const uint8_t C_SW_REV_MIN = 0;
+const uint8_t C_SW_REV_PCH = 1;
+
+const float C_RAD_CONV = 0.0174532925;
+const char C_KEY_LAB[4][3] = {
+  {'7', '8', '9'},
+  {'4', '5', '6'},
+  {'1', '2', '3'},
+  {'<', '0', '>'}
+};
+
+uint8_t cur_tab = 0;
 int angle = 0;
 
 
@@ -72,6 +95,7 @@ void setup() {
 
   // Start display.
   tft.begin(RA8875_480x272);
+  tft.setRotation(3);
 
   // Start touch.
   #if defined(USE_FT5206_TOUCH)
@@ -83,17 +107,20 @@ void setup() {
   #endif
   
   // Welcome screen.
-  // ---------------------------------------------------------------------------------------------
-  // tft.clearScreen(C_WHITE);
-  // tft.setTextColor(C_BLACK, C_WHITE);
-  // tft.setCursor(C_WIDTH/2, C_HEIGHT/2-20, true);
-  // tft.setFontScale(1.5);
-  // tft.print("WELCOME TO THE TUAIC");
-  // tft.setCursor(C_WIDTH/2, C_HEIGHT/2+20, true);
-  // tft.setFontScale(0.5);
-  // tft.print("Touch screen to continue...");
+  // ---------------------------------------------------------------------
+  tft.clearScreen(C_WHITE);
+  tft.setTextColor(C_BLACK);
+  tft.setFontScale(2);
+  tft.setCursor(CENTER, C_HEIGHT/2-60, false);
+  tft.print("TUAIC");
+  tft.setFontScale(0.5);
+  tft.setCursor(CENTER, CENTER, false);
+  tft.print("v" + String(C_SW_REV_MAJ) + "." + String(C_SW_REV_MIN) + "." + String(C_SW_REV_PCH));
+  tft.setCursor(CENTER, C_HEIGHT/2+10, false);
+  tft.setFontScale(0.5);
+  tft.print("Touch screen to continue...");
   
-  // while (not tft.touched());
+  while (not tft.touched());
   drawTab(1);
   cur_tab = 1;
 }
@@ -133,6 +160,7 @@ void loop() {
     }
     
     drawBridge(angle);
+    // drawCtrl(cur_tab);
     
     
     delay(50);
@@ -144,86 +172,27 @@ void loop() {
 // Draw tab.
 // -------------------------------------------------------------------------------------------------
 void drawTab(char tab) {
-  if (tab == 1 && cur_tab != 1) {
-    // Draw tab 1 active.
-    // ---------------------------------------------------------------------
-    tft.clearScreen(C_WDW_BG);
+  if (tab != cur_tab) {
+    tft.clearScreen(C_WDW_BG);  // <todo>: Only clear changing tabs. Based on tab and cur_tab.
     
-    tft.fillRect(0, 0, C_WIDTH, C_TAB_H, C_TAB_INACT);                // Inactive tab background.
-    tft.drawFastHLine(0, C_TAB_H-1, C_WIDTH, C_BLACK);                // Inactive tab bottom line.
-    tft.fillRect(0, 0, C_TAB_W, C_TAB_H+1, C_TAB_ACT);                // Active tab background.
-    tft.drawFastVLine(C_TAB_W, 0, C_TAB_H, C_BLACK);                  // Tab dividing lines.
-    tft.drawFastVLine(2*C_TAB_W, 0, C_TAB_H, C_BLACK);
+    tft.fillRect(0, 0, C_WIDTH, C_TAB_H, C_TAB_INACT);                    // Inactive tab background.
+    tft.drawFastHLine(0, C_TAB_H-1, C_WIDTH, C_BLACK);                    // Inactive tab bottom line.
+    tft.drawFastVLine(C_TAB_W-1, 0, C_TAB_H, C_BLACK);                    // Tab dividing lines.
+    tft.drawFastVLine(2*C_TAB_W-1, 0, C_TAB_H, C_BLACK);
+    tft.fillRect((tab-1) * C_TAB_W, 0, C_TAB_W-1, C_TAB_H+1, C_TAB_ACT);  // Active tab background.
     
-    tft.setTextColor(C_BLACK, C_TAB_ACT);                             // Tab 1 text.
-    tft.setFontScale(1);
-    tft.setCursor(C_TXT_TX1, C_TXT_TY, true);
+    tft.setTextColor(C_BLACK);                  // Tab 1 text.
+    tft.setFontScale(C_TXT_TS);
+    tft.setCursor(C_TXT_TX1, C_TXT_TY, false);
     tft.print("MANUAL");
-    tft.setTextColor(C_BLACK, C_TAB_INACT);                           // Tab 2 text.
-    tft.setFontScale(1);
-    tft.setCursor(C_TXT_TX2, C_TXT_TY, true);
+    tft.setTextColor(C_BLACK);                  // Tab 2 text.
+    tft.setFontScale(C_TXT_TS);
+    tft.setCursor(C_TXT_TX2, C_TXT_TY, false);
     tft.print("AUTO");
-    tft.setTextColor(C_BLACK, C_TAB_INACT);                           // Tab 3 text.
-    tft.setFontScale(1);
-    tft.setCursor(C_TXT_TX3, C_TXT_TY, true);
+    tft.setTextColor(C_BLACK);                  // Tab 3 text.
+    tft.setFontScale(C_TXT_TS);
+    tft.setCursor(C_TXT_TX3, C_TXT_TY, false);
     tft.print("PROGRAM");
-    
-    // Draw tab window objects.
-    // ---------------------------------------------------------------------
-  }
-  else if (tab == 2 && cur_tab != 2) {
-    // Draw tab 2 active.
-    // ---------------------------------------------------------------------
-    tft.clearScreen(C_WDW_BG);
-    
-    tft.fillRect(0, 0, C_WIDTH, C_TAB_H, C_TAB_INACT);                // Inactive tab background.
-    tft.drawFastHLine(0, C_TAB_H-1, C_WIDTH, C_BLACK);                // Inactive tab bottom line.
-    tft.fillRect(C_TAB_W, 0, C_TAB_W, C_TAB_H+1, C_TAB_ACT);          // Active tab background.
-    tft.drawFastVLine(C_TAB_W, 0, C_TAB_H, C_BLACK);                  // Tab dividing lines.
-    tft.drawFastVLine(2*C_TAB_W, 0, C_TAB_H, C_BLACK);
-    
-    tft.setTextColor(C_BLACK, C_TAB_INACT);                           // Tab 1 text.
-    tft.setFontScale(1);
-    tft.setCursor(C_TXT_TX1, C_TXT_TY, true);
-    tft.print("MANUAL");
-    tft.setTextColor(C_BLACK, C_TAB_ACT);                             // Tab 2 text.
-    tft.setFontScale(1);
-    tft.setCursor(C_TXT_TX2, C_TXT_TY, true);
-    tft.print("AUTO");
-    tft.setTextColor(C_BLACK, C_TAB_INACT);                           // Tab 3 text.
-    tft.setFontScale(1);
-    tft.setCursor(C_TXT_TX3, C_TXT_TY, true);
-    tft.print("PROGRAM");
-    
-    // Draw tab window objects.
-    // ---------------------------------------------------------------------
-  }
-  else if (tab == 3  && cur_tab != 3) {
-    // Draw tab 3 active.
-    // ---------------------------------------------------------------------
-    tft.clearScreen(C_WDW_BG);
-    
-    tft.fillRect(0, 0, C_WIDTH, C_TAB_H, C_TAB_INACT);                // Inactive tab background.
-    tft.drawFastHLine(0, C_TAB_H-1, C_WIDTH, C_BLACK);                // Inactive tab bottom line.
-    tft.fillRect(2*C_TAB_W, 0, C_TAB_W, C_TAB_H+1, C_TAB_ACT);        // Active tab background.
-    tft.drawFastVLine(C_TAB_W, 0, C_TAB_H, C_BLACK);                  // Tab dividing lines.
-    tft.drawFastVLine(2*C_TAB_W, 0, C_TAB_H, C_BLACK);
-    
-    tft.setTextColor(C_BLACK, C_TAB_INACT);                           // Tab 1 text.
-    tft.setFontScale(1);
-    tft.setCursor(C_TXT_TX1, C_TXT_TY, true);
-    tft.print("MANUAL");
-    tft.setTextColor(C_BLACK, C_TAB_INACT);                           // Tab 2 text.
-    tft.setFontScale(1);
-    tft.setCursor(C_TXT_TX2, C_TXT_TY, true);
-    tft.print("AUTO");
-    tft.setTextColor(C_BLACK, C_TAB_ACT);                             // Tab 3 text.
-    tft.setFontScale(1);
-    tft.setCursor(C_TXT_TX3, C_TXT_TY, true);
-    tft.print("PROGRAM");
-    
-    // Draw tab window objects.
-    // ---------------------------------------------------------------------
   }
   
   // Draw common objects.
@@ -232,6 +201,7 @@ void drawTab(char tab) {
   tft.fillCircle(C_TABLE_X, C_TABLE_Y, C_TABLE_R+1, C_TABLE_BG);
   
   drawBridge(angle);
+  drawCtrl(tab);
   
   return;
 }
@@ -241,21 +211,27 @@ void drawTab(char tab) {
 // Draw table bridge.
 // -------------------------------------------------------------------------------------------------
 void drawBridge(int angle) {
-  static int x1, y1, x2, y2, angle_z1 = 0;
+  static boolean init = 1;
+  static int x1, y1, x2, y2, angle_z1;
   
-  // Remove old bridge.
-  // ---------------------------------------------------------------------
-  tft.drawLineAngle(C_TABLE_X, C_TABLE_Y, -angle_z1    , C_TABLE_R  , C_TABLE_BG, 0);
-  tft.drawLineAngle(C_TABLE_X, C_TABLE_Y, -angle_z1+180, C_TABLE_R  , C_TABLE_BG, 0);
-  tft.drawLineAngle(x1       , y1       , -angle_z1    , C_TABLE_R-1, C_TABLE_BG, 0);
-  tft.drawLineAngle(x1       , y1       , -angle_z1+180, C_TABLE_R-1, C_TABLE_BG, 0);
-  tft.drawLineAngle(x2       , y2       , -angle_z1    , C_TABLE_R-1, C_TABLE_BG, 0);
-  tft.drawLineAngle(x2       , y2       , -angle_z1+180, C_TABLE_R-1, C_TABLE_BG, 0);
+  if (init == 0) {
+    // Remove old bridge.
+    // ---------------------------------------------------------------------
+    tft.drawLineAngle(C_TABLE_X, C_TABLE_Y, -angle_z1    , C_TABLE_R  , C_TABLE_BG, 0);
+    tft.drawLineAngle(C_TABLE_X, C_TABLE_Y, -angle_z1+180, C_TABLE_R  , C_TABLE_BG, 0);
+    tft.drawLineAngle(x1       , y1       , -angle_z1    , C_TABLE_R-1, C_TABLE_BG, 0);
+    tft.drawLineAngle(x1       , y1       , -angle_z1+180, C_TABLE_R-1, C_TABLE_BG, 0);
+    tft.drawLineAngle(x2       , y2       , -angle_z1    , C_TABLE_R-1, C_TABLE_BG, 0);
+    tft.drawLineAngle(x2       , y2       , -angle_z1+180, C_TABLE_R-1, C_TABLE_BG, 0);
+  }
+  else {
+    init = 0;
+  }
   
-  x1 = C_TABLE_X + floor(-10 * sin(rad_conv * angle));
-  y1 = C_TABLE_Y + floor(-10 * cos(rad_conv * angle));
-  x2 = C_TABLE_X - floor(-10 * sin(rad_conv * angle));
-  y2 = C_TABLE_Y - floor(-10 * cos(rad_conv * angle));
+  x1 = C_TABLE_X + floor(-10 * sin(C_RAD_CONV * angle));
+  y1 = C_TABLE_Y + floor(-10 * cos(C_RAD_CONV * angle));
+  x2 = C_TABLE_X - floor(-10 * sin(C_RAD_CONV * angle));
+  y2 = C_TABLE_Y - floor(-10 * cos(C_RAD_CONV * angle));
   
   // Draw new bridge.
   // ---------------------------------------------------------------------
@@ -268,6 +244,44 @@ void drawBridge(int angle) {
   
   angle_z1 = angle;
   
+  return;
+}
+
+
+// -------------------------------------------------------------------------------------------------
+// Draw control pad.
+// -------------------------------------------------------------------------------------------------
+void drawCtrl(int tab) {
+  tft.setActiveWindow(C_CTRL_X, C_CTRL_X + C_CTRL_W, C_CTRL_Y, C_CTRL_Y + C_CTRL_H);
+  tft.clearActiveWindow(false);
+  // tft.fillWindow(C_BLACK);
+  
+  if (tab == 1) {
+    
+  }
+  else if (tab == 2 || tab == 3) {
+    for (int i = 0; i <= 4; i++) {  // Draw horizontal keypad lines.
+      tft.drawFastHLine(C_CTRL_X, C_CTRL_Y + (i * C_CTRL_B_H), C_CTRL_W, C_BLACK);
+    }
+    
+    for (int i = 0; i <= 3; i++) {  // Draw vertical keypad lines.
+      tft.drawFastVLine(C_CTRL_X + (i * C_CTRL_B_W), C_CTRL_Y, C_CTRL_H, C_BLACK);
+    }
+    
+    tft.setTextColor(C_BLACK);
+    tft.setFontScale(2);
+    
+    for (int i = 0; i <= 2; i++) {
+      for (int j = 0; j <= 3; j++) {
+        int txt_x = C_CTRL_X + (i * C_CTRL_B_W) + (C_CTRL_B_W / 2) - (tft.getFontWidth() / 2);
+        int txt_y = C_CTRL_Y + (j * C_CTRL_B_H) + (C_CTRL_B_H / 2) - (tft.getFontHeight() / 2) - 2;
+        tft.setCursor(txt_x, txt_y, false);
+        tft.print(C_KEY_LAB[j][i]);
+      }
+    }
+  }
+  
+  tft.setActiveWindow();
   return;
 }
 
