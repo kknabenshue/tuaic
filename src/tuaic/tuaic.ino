@@ -85,10 +85,12 @@ const char C_KEY_LAB[4][3] = {
 uint8_t cur_tab = 0;
 int angle = 0;
 
-
+// -------------------------------------------------------------------------------------------------
+// Setup/initialize.
+// -------------------------------------------------------------------------------------------------
 void setup() {
   // Set up serial debug and clear terminal if using Putty.
-  Serial.begin(38400);
+  Serial.begin(74880);
   Serial.println();
   Serial.println("-----------------------------------------------------------------------------");
   Serial.println("RA8875 started...");
@@ -111,7 +113,7 @@ void setup() {
   tft.clearScreen(C_WHITE);
   tft.setTextColor(C_BLACK);
   tft.setFontScale(2);
-  tft.setCursor(CENTER, C_HEIGHT/2-60, false);
+  tft.setCursor(CENTER, C_HEIGHT/2-57, false);
   tft.print("TUAIC");
   tft.setFontScale(0.5);
   tft.setCursor(CENTER, CENTER, false);
@@ -125,6 +127,9 @@ void setup() {
   cur_tab = 1;
 }
 
+// -------------------------------------------------------------------------------------------------
+// Main loop.
+// -------------------------------------------------------------------------------------------------
 void loop() {
   if (tft.touched()) {
     tft.updateTS(); // Update touch data in library
@@ -252,14 +257,61 @@ void drawBridge(int angle) {
 // Draw control pad.
 // -------------------------------------------------------------------------------------------------
 void drawCtrl(int tab) {
+  int bc_x, bc_y, txt_w, txt_h;
+  
   tft.setActiveWindow(C_CTRL_X, C_CTRL_X + C_CTRL_W, C_CTRL_Y, C_CTRL_Y + C_CTRL_H);
   tft.clearActiveWindow(false);
   // tft.fillWindow(C_BLACK);
   
   if (tab == 1) {
+    tft.setTextColor(C_BLACK);
+    tft.setFontScale(2);
+    txt_w = tft.getFontWidth();
+    txt_h = tft.getFontHeight();
     
+    // Draw button rectangles.
+    tft.drawRect(C_WIDTH/2 - C_CTRL_B_W - 10, C_CTRL_Y + C_CTRL_H - C_CTRL_B_H - 14, C_CTRL_B_W + 1, C_CTRL_B_H + 1, C_BLACK);
+    tft.drawRect(C_WIDTH/2 + 10             , C_CTRL_Y + C_CTRL_H - C_CTRL_B_H - 14, C_CTRL_B_W + 1, C_CTRL_B_H + 1, C_BLACK);
+    
+    // Draw CCW arrow.
+    bc_x = C_WIDTH/2 - C_CTRL_B_W - 10 + C_CTRL_B_W/2;
+    bc_y = C_CTRL_Y + C_CTRL_H - C_CTRL_B_H - 14 + C_CTRL_B_H/2;
+    
+    tft.fillCircle(bc_x, bc_y + 1, txt_h/2 - 8, C_BLACK);
+    tft.fillCircle(bc_x, bc_y + 1, txt_h/2 - 10, C_WDW_BG);
+    tft.fillRect(bc_x, bc_y - 10, txt_h/2, 16, C_WDW_BG);
+    tft.drawLine(bc_x + txt_h/2 - 15 - 1, bc_y     + 6, bc_x + txt_h/2 - 8 - 1, bc_y     + 6, C_BLACK);
+    tft.drawLine(bc_x + txt_h/2 - 15 - 1, bc_y + 1 + 6, bc_x + txt_h/2 - 8 - 1, bc_y + 1 + 6, C_BLACK);
+    tft.drawLine(bc_x + txt_h/2 - 8  - 1, bc_y     + 6, bc_x + txt_h/2 - 8 - 1, bc_y + 7 + 6, C_BLACK);
+    tft.drawLine(bc_x + txt_h/2 - 7  - 1, bc_y     + 6, bc_x + txt_h/2 - 7 - 1, bc_y + 7 + 6, C_BLACK);
+    
+    // Draw CW arrow.
+    bc_x = C_WIDTH/2 + 10 + C_CTRL_B_W/2;
+    bc_y = C_CTRL_Y + C_CTRL_H - C_CTRL_B_H - 14 + C_CTRL_B_H/2;
+    
+    tft.fillCircle(bc_x, bc_y + 1, txt_h/2 - 8, C_BLACK);
+    tft.fillCircle(bc_x, bc_y + 1, txt_h/2 - 10, C_WDW_BG);
+    tft.fillRect(bc_x - txt_h/2, bc_y - 10, txt_h/2, 16, C_WDW_BG);
+    tft.drawLine(bc_x - txt_h/2 + 15 + 1, bc_y     + 6, bc_x - txt_h/2 + 8 + 1, bc_y     + 6, C_BLACK);
+    tft.drawLine(bc_x - txt_h/2 + 15 + 1, bc_y + 1 + 6, bc_x - txt_h/2 + 8 + 1, bc_y + 1 + 6, C_BLACK);
+    tft.drawLine(bc_x - txt_h/2 + 8  + 1, bc_y     + 6, bc_x - txt_h/2 + 8 + 1, bc_y + 7 + 6, C_BLACK);
+    tft.drawLine(bc_x - txt_h/2 + 7  + 1, bc_y     + 6, bc_x - txt_h/2 + 7 + 1, bc_y + 7 + 6, C_BLACK);
+    
+    // Speed slider.
+    tft.drawFastHLine(C_CTRL_X + 20, C_CTRL_Y + C_CTRL_H - C_CTRL_B_H - 80, C_CTRL_W - 40, C_BLACK);
+    tft.fillRect(C_CTRL_X + 60, C_CTRL_Y + C_CTRL_H - C_CTRL_B_H - 80 - 25, 25, 50, C_WDW_BG);  // <todo>: Replace x with current slider position value.
+    tft.drawRect(C_CTRL_X + 60, C_CTRL_Y + C_CTRL_H - C_CTRL_B_H - 80 - 25, 25, 50, C_BLACK);
+    
+    tft.setFontScale(2);
+    tft.setCursor(CENTER, C_CTRL_Y + C_CTRL_H - C_CTRL_B_H - 105 - txt_h - 35, false);
+    tft.print("SPEED: " + String(20));  // <todo>: Replace with 0 to 99 mapped speed.
   }
   else if (tab == 2 || tab == 3) {
+    tft.setTextColor(C_BLACK);
+    tft.setFontScale(2);
+    txt_w = tft.getFontWidth();
+    txt_h = tft.getFontHeight();
+    
     for (int i = 0; i <= 4; i++) {  // Draw horizontal keypad lines.
       tft.drawFastHLine(C_CTRL_X, C_CTRL_Y + (i * C_CTRL_B_H), C_CTRL_W, C_BLACK);
     }
@@ -268,15 +320,33 @@ void drawCtrl(int tab) {
       tft.drawFastVLine(C_CTRL_X + (i * C_CTRL_B_W), C_CTRL_Y, C_CTRL_H, C_BLACK);
     }
     
-    tft.setTextColor(C_BLACK);
-    tft.setFontScale(2);
-    
     for (int i = 0; i <= 2; i++) {
       for (int j = 0; j <= 3; j++) {
-        int txt_x = C_CTRL_X + (i * C_CTRL_B_W) + (C_CTRL_B_W / 2) - (tft.getFontWidth() / 2);
-        int txt_y = C_CTRL_Y + (j * C_CTRL_B_H) + (C_CTRL_B_H / 2) - (tft.getFontHeight() / 2) - 2;
-        tft.setCursor(txt_x, txt_y, false);
-        tft.print(C_KEY_LAB[j][i]);
+        bc_x = C_CTRL_X + (i * C_CTRL_B_W) + (C_CTRL_B_W / 2);
+        bc_y = C_CTRL_Y + (j * C_CTRL_B_H) + (C_CTRL_B_H / 2);
+        
+        if (i == 0 && j == 3) {       // Draw CCW arrow.
+          tft.fillCircle(bc_x, bc_y + 1, txt_h/2 - 8, C_BLACK);
+          tft.fillCircle(bc_x, bc_y + 1, txt_h/2 - 10, C_WDW_BG);
+          tft.fillRect(bc_x, bc_y - 10, txt_h/2, 16, C_WDW_BG);
+          tft.drawLine(bc_x + txt_h/2 - 15 - 1, bc_y     + 6, bc_x + txt_h/2 - 8 - 1, bc_y     + 6, C_BLACK);
+          tft.drawLine(bc_x + txt_h/2 - 15 - 1, bc_y + 1 + 6, bc_x + txt_h/2 - 8 - 1, bc_y + 1 + 6, C_BLACK);
+          tft.drawLine(bc_x + txt_h/2 - 8  - 1, bc_y     + 6, bc_x + txt_h/2 - 8 - 1, bc_y + 7 + 6, C_BLACK);
+          tft.drawLine(bc_x + txt_h/2 - 7  - 1, bc_y     + 6, bc_x + txt_h/2 - 7 - 1, bc_y + 7 + 6, C_BLACK);
+        }
+        else if (i == 2 && j == 3) {  // Draw CW arrow.
+          tft.fillCircle(bc_x, bc_y + 1, txt_h/2 - 8, C_BLACK);
+          tft.fillCircle(bc_x, bc_y + 1, txt_h/2 - 10, C_WDW_BG);
+          tft.fillRect(bc_x - txt_h/2, bc_y - 10, txt_h/2, 16, C_WDW_BG);
+          tft.drawLine(bc_x - txt_h/2 + 15 + 1, bc_y     + 6, bc_x - txt_h/2 + 8 + 1, bc_y     + 6, C_BLACK);
+          tft.drawLine(bc_x - txt_h/2 + 15 + 1, bc_y + 1 + 6, bc_x - txt_h/2 + 8 + 1, bc_y + 1 + 6, C_BLACK);
+          tft.drawLine(bc_x - txt_h/2 + 8  + 1, bc_y     + 6, bc_x - txt_h/2 + 8 + 1, bc_y + 7 + 6, C_BLACK);
+          tft.drawLine(bc_x - txt_h/2 + 7  + 1, bc_y     + 6, bc_x - txt_h/2 + 7 + 1, bc_y + 7 + 6, C_BLACK);
+        }
+        else {
+          tft.setCursor(bc_x - txt_w/2, bc_y - txt_h/2 - 2, false);
+          tft.print(C_KEY_LAB[j][i]);
+        }
       }
     }
   }
